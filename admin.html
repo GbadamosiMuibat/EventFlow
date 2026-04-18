@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventFlow – Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a href="dashboard.html" class="logo"><span class="logo-dot"></span>EventFlow</a>
+    <nav class="header-nav">
+      <a href="dashboard.html" class="nav-link">← Dashboard</a>
+    </nav>
+  </header>
+
+  <div id="pageContent"></div>
+
+  <div id="toast-container"></div>
+  <script src="script.js"></script>
+  <script>
+    const eventId = EF.getUrlParam('id');
+    const event   = eventId ? EF.getEvent(eventId) : null;
+
+    if (!event) {
+      document.getElementById('pageContent').innerHTML = `
+        <div style="text-align:center;padding:5rem 2rem">
+          <div style="font-size:3rem;margin-bottom:1rem;opacity:.4">🔍</div>
+          <h2 style="font-family:'Syne',sans-serif;font-weight:800">Event not found</h2>
+          <p style="color:var(--muted);margin-bottom:1.5rem">This event may have been deleted.</p>
+          <a href="dashboard.html" class="btn btn-primary">Back to Dashboard</a>
+        </div>`;
+    } else {
+      renderAdmin();
+    }
+
+    function renderAdmin() {
+      const attendees  = EF.getAttendees(eventId);
+      const fields     = event.fields || [];
+      const checkInURL = EF.getEventURL(eventId);
+
+      document.getElementById('pageContent').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-title-block" style="margin-bottom:1.5rem">
+            <p class="page-eyebrow">Event Admin</p>
+            <h1 class="page-title">${escHtml(event.name)}</h1>
+            ${event.date ? `<p class="page-subtitle">📅 ${event.date}${event.time ? ' · ' + event.time : ''}${event.location ? ' &nbsp;·&nbsp; 📍 ' + escHtml(event.location) : ''}</p>` : ''}
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-value">${attendees.length}</div><div class="stat-label">Attendees</div></div>
+            <div class="stat-card"><div class="stat-value">${fields.length}</div><div class="stat-label">Form Fields</div></div>
+            <div class="stat-card"><div class="stat-value">${event.date || '—'}</div><div class="stat-label">Event Date</div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:2rem;flex-wrap:wrap">
+            <div>
+              <div style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem">Check-in QR Code</div>
+              <div id="qrcode"></div>
+            </div>
+            <div style="flex:1;min-width:220px">
+              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:.4rem">Share with attendees</div>
+              <p style="font-size:.875rem;color:var(--muted);margin-bottom:1rem">Participants scan this code or open the link to check in.</p>
+              <div class="qr-url" style="margin-bottom:1rem">${checkInURL}</div>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <button type="button" class="btn btn-outline btn-sm" onclick="EF.copy('${checkInURL}')">📋 Copy link</button>
+                <a href="${checkInURL}" target="_blank" class="btn btn-outline btn-sm">Open form →</a>
+                <a href="create-event.html?edit=${eventId}" class="btn btn-outline btn-sm">✏ Edit event</a>
+                <button type="button" class="btn btn-outline btn-sm" onclick="renderAdmin()">↻ Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-toolbar">
+            <div class="admin-event-name">Attendance List</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              ${attendees.length ? `<button type="button" class="btn btn-danger btn-sm" onclick="clearAll()">Clear all</button>` : ''}
+              <button type="button" class="btn btn-primary btn-sm" onclick="EF.exportCSV('${eventId}')">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            ${attendees.length === 0 ? `
+              <div class="empty-state" style="display:block;grid-column:unset">
+                <div class="empty-icon">👥</div>
+                <p>No attendees yet. Share the check-in link or QR code to get started.</p>
+              </div>` : `
+              <table>
+                <thead>
+                  <tr>
+                    <th class="td-index">#</th>
+                    ${fields.map(f => `<th>${escHtml(f.label)}</th>`).join('')}
+                    <th>Checked In</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${attendees.map((a, i) => `
+                    <tr>
+                      <td class="td-index">${i + 1}</td>
+                      ${fields.map(f => `<td>${escHtml(a[f.key] || '—')}</td>`).join('')}
+                      <td class="timestamp-cell">${fmtTime(a._ts)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>`}
+          </div>
+        </div>`;
+
+      setTimeout(() => {
+        const el = document.getElementById('qrcode');
+        if (!el) return;
+        try {
+          new QRCode(el, { text: checkInURL, width: 128, height: 128, colorDark: '#0e0e10', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+        } catch(e) {
+          el.innerHTML = '<div style="width:128px;height:128px;display:flex;align-items:center;justify-content:center;background:var(--cream);border-radius:8px;font-size:.75rem;color:var(--muted)">QR unavailable</div>';
+        }
+      }, 100);
+    }
+
+    function fmtTime(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      return d.toLocaleDateString('en', { month: 'short', day: 'numeric' }) + ' ' +
+        d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function clearAll() {
+      const n = EF.getAttendees(eventId).length;
+      if (!n) return;
+      if (!confirm('Remove all ' + n + ' attendee records? This cannot be undone.')) return;
+      EF.saveAttendees(eventId, []);
+      const events = EF.getEvents();
+      const idx = events.findIndex(e => e.id === eventId);
+      if (idx !== -1) { events[idx].count = 0; EF.saveEvents(events); }
+      EF.toast('Attendees cleared', 'success');
+      renderAdmin();
+    }
+  </script>
+</body>
+</html>

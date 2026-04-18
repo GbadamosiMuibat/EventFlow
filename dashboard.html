@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventFlow – Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="dashboard.html" class="logo"><span class="logo-dot"></span>EventFlow</a>
+    <nav class="header-nav">
+      <a href="create-event.html" class="btn btn-primary btn-sm">+ New Event</a>
+    </nav>
+  </header>
+
+  <div class="page-wrap">
+    <div class="page-title-block">
+      <p class="page-eyebrow">Organizer Dashboard</p>
+      <h1 class="page-title" id="pageTitle">Your Events</h1>
+      <p class="page-subtitle">Manage events, track attendance, and export records.</p>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+    <div id="eventsArea"></div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="script.js"></script>
+  <script>
+    const ICONS = ['📅','🎯','🎪','🏆','💡','🚀','🎨','📊','🌟','🔥'];
+
+    function render() {
+      const events = EF.getEvents();
+      const totalAtt = events.reduce((s, e) => s + (e.count || 0), 0);
+      const latest = events.length ? new Date(events[0].createdAt).toLocaleDateString('en',{month:'short',day:'numeric'}) : '—';
+
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat-card"><div class="stat-value">${events.length}</div><div class="stat-label">Total Events</div></div>
+        <div class="stat-card"><div class="stat-value">${totalAtt}</div><div class="stat-label">Total Attendees</div></div>
+        <div class="stat-card"><div class="stat-value">${latest}</div><div class="stat-label">Latest Event</div></div>`;
+
+      const area = document.getElementById('eventsArea');
+      if (!events.length) {
+        area.innerHTML = `
+          <div class="empty-state" style="display:block">
+            <div class="empty-icon">📋</div>
+            <p>No events yet. Create your first event to start collecting attendance.</p>
+            <a href="create-event.html" class="btn btn-primary btn-lg">Create your first event</a>
+          </div>`;
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="events-header">
+          <span class="events-count">${events.length} event${events.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="events-grid">
+          ${events.map((ev, i) => `
+            <div class="event-card">
+              <div>
+                <div class="event-card-title">${escHtml(ev.name)}</div>
+                ${ev.description ? `<div style="font-size:.875rem;color:var(--muted);margin-top:.25rem">${escHtml(ev.description)}</div>` : ''}
+              </div>
+              <div class="event-card-meta">
+                ${ev.date ? `<span class="meta-pill">📅 ${ev.date}${ev.time ? ' · ' + ev.time : ''}</span>` : ''}
+                ${ev.location ? `<span class="meta-pill">📍 ${escHtml(ev.location)}</span>` : ''}
+                <span class="meta-pill">${(ev.fields||[]).length} fields</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <div>
+                  <div class="attendee-count">${ev.count || 0}</div>
+                  <div class="attendee-label">checked in</div>
+                </div>
+              </div>
+              <div class="event-card-actions">
+                <a href="event.html?id=${ev.id}" target="_blank" class="btn btn-outline btn-sm">🔗 Check-in link</a>
+                <button class="btn btn-dark btn-sm" onclick="goAdmin('${ev.id}')">View attendees</button>
+                <button class="btn btn-danger btn-sm" onclick="delEvent('${ev.id}')">✕</button>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    function goAdmin(id) { window.location.href = 'admin.html?id=' + id; }
+
+    function delEvent(id) {
+      const ev = EF.getEvent(id);
+      if (!ev) return;
+      const n = EF.getAttendees(id).length;
+      const msg = n > 0
+        ? 'Delete "' + ev.name + '"? This will remove ' + n + ' attendee record' + (n !== 1 ? 's' : '') + '.'
+        : 'Delete "' + ev.name + '"?';
+      if (!confirm(msg)) return;
+      EF.deleteEvent(id);
+      EF.toast('Event deleted', 'success');
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

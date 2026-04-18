@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventFlow – Create Event</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="dashboard.html" class="logo"><span class="logo-dot"></span>EventFlow</a>
+    <nav class="header-nav">
+      <a href="dashboard.html" class="nav-link">← Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="page-wrap-narrow">
+    <div class="page-title-block">
+      <p class="page-eyebrow">New Event</p>
+      <h1 class="page-title" id="pageTitle">Create Event</h1>
+      <p class="page-subtitle">Set up your event and choose what info to collect.</p>
+    </div>
+
+    <!-- Event Details -->
+    <div class="form-section">
+      <div class="form-section-title">Event Details</div>
+      <div class="form-group">
+        <label>Event Name <span class="required">*</span></label>
+        <input type="text" id="evName" placeholder="e.g. Annual Tech Summit 2026" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="evDesc" placeholder="Brief description of your event..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="evDate">
+        </div>
+        <div class="form-group">
+          <label>Time</label>
+          <input type="time" id="evTime">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Location / Venue</label>
+        <input type="text" id="evLocation" placeholder="e.g. Eko Hotel, Lagos" maxlength="200">
+      </div>
+    </div>
+
+    <!-- Registration Fields -->
+    <div class="form-section">
+      <div class="form-section-title">Registration Fields</div>
+      <p style="font-size:.875rem;color:var(--muted);margin-bottom:1.25rem">
+        Toggle which fields participants fill in. <strong>Full Name</strong> is always included.
+      </p>
+      <div class="fields-grid" id="fieldsGrid"></div>
+
+      <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--cream)">
+        <div style="font-size:.85rem;font-weight:500;color:var(--ink);margin-bottom:.75rem">Custom fields</div>
+        <div id="customFieldsList" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem"></div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addCustomField()">+ Add custom field</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap">
+      <a href="dashboard.html" class="btn btn-outline">Cancel</a>
+      <button type="button" class="btn btn-primary btn-lg" onclick="saveEvent()">
+        <span id="saveLabel">Create Event</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="script.js"></script>
+  <script>
+    const editId        = EF.getUrlParam('edit');
+    const activePresets = new Set(['name', 'email']);
+    let customFields    = [];
+
+    function renderFields() {
+      document.getElementById('fieldsGrid').innerHTML = PRESET_FIELDS.map(f => {
+        const on     = activePresets.has(f.key);
+        const locked = f.key === 'name';
+        return `<label class="field-toggle ${on ? 'checked' : ''}" id="ft_${f.key}"
+            ${locked ? 'style="opacity:.55;pointer-events:none"' : ''}>
+          <input type="checkbox" ${on ? 'checked' : ''} ${locked ? 'disabled' : ''}
+            onchange="togglePreset('${f.key}', this.checked)">
+          <span>${f.icon}</span>
+          <span class="field-toggle-label">${f.label}</span>
+        </label>`;
+      }).join('');
+    }
+
+    function togglePreset(key, checked) {
+      checked ? activePresets.add(key) : activePresets.delete(key);
+      const el = document.getElementById('ft_' + key);
+      if (el) el.classList.toggle('checked', checked);
+    }
+
+    function addCustomField() {
+      const id = 'cf_' + Date.now();
+      customFields.push({ id, label: '', type: 'text' });
+      renderCustomFields();
+      setTimeout(() => { const el = document.querySelector('[data-cfid="' + id + '"]'); if (el) el.focus(); }, 50);
+    }
+
+    function renderCustomFields() {
+      document.getElementById('customFieldsList').innerHTML = customFields.map(f => `
+        <div style="display:grid;grid-template-columns:1fr 130px auto;gap:.5rem;align-items:center;
+          background:var(--paper);border:1.5px solid var(--border);border-radius:8px;padding:.6rem .85rem">
+          <input type="text" data-cfid="${f.id}" placeholder="Field label (e.g. Badge Size)"
+            value="${escHtml(f.label)}" oninput="updateCF('${f.id}','label',this.value)"
+            style="border:none;background:transparent;padding:0;font-size:.875rem">
+          <select onchange="updateCF('${f.id}','type',this.value)"
+            style="border:none;background:transparent;padding:0;font-size:.875rem">
+            <option value="text"     ${f.type==='text'    ?'selected':''}>Short text</option>
+            <option value="email"    ${f.type==='email'   ?'selected':''}>Email</option>
+            <option value="tel"      ${f.type==='tel'     ?'selected':''}>Phone</option>
+            <option value="number"   ${f.type==='number'  ?'selected':''}>Number</option>
+            <option value="textarea" ${f.type==='textarea'?'selected':''}>Long text</option>
+          </select>
+          <button type="button" class="btn btn-danger btn-sm btn-icon" onclick="removeCF('${f.id}')"
+            style="width:28px;height:28px;font-size:.9rem">✕</button>
+        </div>`).join('');
+    }
+
+    function updateCF(id, prop, val) { const f = customFields.find(x => x.id === id); if (f) f[prop] = val; }
+    function removeCF(id) { customFields = customFields.filter(f => f.id !== id); renderCustomFields(); }
+
+    function saveEvent() {
+      const name = document.getElementById('evName').value.trim();
+      if (!name) { EF.toast('Event name is required', 'error'); document.getElementById('evName').focus(); return; }
+
+      const presetObjs = PRESET_FIELDS
+        .filter(f => activePresets.has(f.key))
+        .map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required }));
+
+      const customObjs = customFields
+        .filter(f => f.label.trim())
+        .map(f => ({ key: f.id, label: f.label.trim(), type: f.type, required: false }));
+
+      const allFields = [...presetObjs, ...customObjs];
+      if (!allFields.length) { EF.toast('Select at least one field', 'error'); return; }
+
+      const data = {
+        name,
+        description: document.getElementById('evDesc').value.trim(),
+        date:        document.getElementById('evDate').value,
+        time:        document.getElementById('evTime').value,
+        location:    document.getElementById('evLocation').value.trim(),
+        fields:      allFields
+      };
+
+      let targetId;
+      if (editId) {
+        EF.updateEvent(editId, data);
+        EF.toast('Event updated!', 'success');
+        targetId = editId;
+      } else {
+        const ev = EF.createEvent(data);
+        EF.toast('Event created!', 'success');
+        targetId = ev.id;
+      }
+      setTimeout(() => { window.location.href = 'admin.html?id=' + targetId; }, 600);
+    }
+
+    // Edit mode pre-fill
+    if (editId) {
+      const ev = EF.getEvent(editId);
+      if (ev) {
+        document.getElementById('pageTitle').textContent = 'Edit Event';
+        document.getElementById('saveLabel').textContent = 'Save Changes';
+        document.getElementById('evName').value     = ev.name        || '';
+        document.getElementById('evDesc').value     = ev.description || '';
+        document.getElementById('evDate').value     = ev.date        || '';
+        document.getElementById('evTime').value     = ev.time        || '';
+        document.getElementById('evLocation').value = ev.location    || '';
+        activePresets.clear();
+        const presetKeys = new Set(PRESET_FIELDS.map(f => f.key));
+        (ev.fields || []).forEach(f => {
+          if (presetKeys.has(f.key)) activePresets.add(f.key);
+          else customFields.push({ id: f.key, label: f.label, type: f.type });
+        });
+        activePresets.add('name');
+        renderCustomFields();
+      }
+    }
+
+    renderFields();
+  </script>
+</body>
+</html>
