@@ -73,6 +73,7 @@
   </div>
 
   <div id="toast-container"></div>
+  
   <script src="script.js"></script>
   <script>
     const editId        = EF.getUrlParam('edit');
@@ -87,7 +88,7 @@
             ${locked ? 'style="opacity:.55;pointer-events:none"' : ''}>
           <input type="checkbox" ${on ? 'checked' : ''} ${locked ? 'disabled' : ''}
             onchange="togglePreset('${f.key}', this.checked)">
-          <span>${f.icon}</span>
+          
           <span class="field-toggle-label">${f.label}</span>
         </label>`;
       }).join('');

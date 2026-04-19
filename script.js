@@ -1,4 +1,4 @@
-// ─── EventFlow Core JS ───────────────────────────────────────────────────────
+// EventFlow Core JS 
 
 const EF = {
   getEvents()             { return JSON.parse(localStorage.getItem('ef_events') || '[]'); },
@@ -85,14 +85,14 @@ const EF = {
 
 // Preset fields
 const PRESET_FIELDS = [
-  { key: 'name',       label: 'Full Name',      type: 'text',  icon: '👤', required: true  },
-  { key: 'email',      label: 'Email Address',  type: 'email', icon: '✉️', required: false },
-  { key: 'phone',      label: 'Phone Number',   type: 'tel',   icon: '📞', required: false },
-  { key: 'company',    label: 'Company / Org',  type: 'text',  icon: '🏢', required: false },
-  { key: 'title',      label: 'Job Title',      type: 'text',  icon: '💼', required: false },
-  { key: 'department', label: 'Department',     type: 'text',  icon: '🗂️', required: false },
-  { key: 'city',       label: 'City',           type: 'text',  icon: '🌍', required: false },
-  { key: 'ticket',     label: 'Ticket / Reg #', type: 'text',  icon: '🎫', required: false },
+  { key: 'name',       label: 'Full Name',      type: 'text',   required: true  },
+  { key: 'email',      label: 'Email Address',  type: 'email',  required: false },
+  { key: 'phone',      label: 'Phone Number',   type: 'tel',    required: false },
+  { key: 'company',    label: 'Company / Org',  type: 'text',   required: false },
+  { key: 'title',      label: 'Job Title',      type: 'text',   required: false },
+  { key: 'department', label: 'Department',     type: 'text',   required: false },
+  { key: 'city',       label: 'City',           type: 'text',   required: false },
+  { key: 'ticket',     label: 'Ticket / Reg #', type: 'text',   required: false },
 ];
 
 // Shared escape helper used across all pages
