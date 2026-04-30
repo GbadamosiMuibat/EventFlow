@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EventFlow – Create Event</title>
+  <link rel="icon" type="image/x-icon" href="images\Favicon.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -87,7 +88,7 @@
             ${locked ? 'style="opacity:.55;pointer-events:none"' : ''}>
           <input type="checkbox" ${on ? 'checked' : ''} ${locked ? 'disabled' : ''}
             onchange="togglePreset('${f.key}', this.checked)">
-          <span>${f.icon}</span>
+          
           <span class="field-toggle-label">${f.label}</span>
         </label>`;
       }).join('');
