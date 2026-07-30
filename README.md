@@ -10,14 +10,13 @@ The project is built using HTML, CSS, and JavaScript and uses browser local stor
 
 ## Key Features
 
-1.Create multiple events from a dashboard
-Custom registration fields for each event
-Dynamic form generation based on event settings
-QR code check-in for participants
-Real-time attendee counter
-Local Storage data persistence (data remains after refresh)
-Download attendance list in Excel/CSV format
-Lightweight and easy to deploy
+##### Create multiple events from a dashboard
+##### Dynamic form generation based on event settings
+##### QR code check-in for participants
+##### Real-time attendee counter
+##### Local Storage data persistence (data remains after refresh)
+##### Download attendance list in Excel/CSV format
+
 
 ## How It Works
 
