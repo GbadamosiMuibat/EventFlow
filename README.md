@@ -30,25 +30,12 @@ The system stores the attendance data locally.
 The organizer downloads the attendance list as an Excel file.
 
 ## Tech Stack
-### Frontend:
 
 HTML
 CSS
 JavaScript
 
-### Browser APIs:
 
-localStorage API
-DOM API
-Clipboard API
-URL / URLSearchParams API
-Blob API for file export
-Date API
-JSON API
-
-### Third-Party Library:
-
-QRCode.js (loaded via CDN) — generates QR codes for event check-in links
 
 ## Live link:
 
