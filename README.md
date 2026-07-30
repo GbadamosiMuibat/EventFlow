@@ -20,13 +20,13 @@ The project is built using HTML, CSS, and JavaScript and uses browser local stor
 
 ## How It Works
 
-The organizer creates an event from the dashboard.
-The organizer selects the information they want to collect (e.g., Name, Email, Phone).
-The system generates a unique registration form for the event.
-Participants scan a QR code or open the event link.
-Participants submit their information through the form.
-The system stores the attendance data locally.
-The organizer downloads the attendance list as an Excel file.
+##### The organizer creates an event from the dashboard.
+##### The organizer selects the information they want to collect (e.g., Name, Email, Phone).
+##### The system generates a unique registration form for the event.
+##### Participants scan a QR code or open the event link.
+##### Participants submit their information through the form.
+##### The system stores the attendance data locally.
+##### The organizer downloads the attendance list as an Excel file.
 
 ## Tech Stack
 
