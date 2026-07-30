@@ -10,7 +10,7 @@ The project is built using HTML, CSS, and JavaScript and uses browser local stor
 
 ## Key Features
 
-Create multiple events from a dashboard
+1.Create multiple events from a dashboard
 Custom registration fields for each event
 Dynamic form generation based on event settings
 QR code check-in for participants
